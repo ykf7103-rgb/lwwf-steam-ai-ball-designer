@@ -138,27 +138,34 @@ async function handleSubmissions(request, env) {
   }
 
   const className = cleanText(body.className || "5A");
-  if (!CLASS_LIMITS[className]) {
+  const isAllClasses = className === "all";
+  if (!isAllClasses && !CLASS_LIMITS[className]) {
     return json({ ok: false, error: "請選擇正確班別。" }, 400);
   }
 
-  const prefix = `steam-ai-ball-designer/2025-26/${className}/`;
+  const prefix = isAllClasses ? "steam-ai-ball-designer/2025-26/" : `steam-ai-ball-designer/2025-26/${className}/`;
+  const selectedClasses = isAllClasses ? Object.keys(CLASS_LIMITS) : [className];
   const keys = await listAllKeys(env.STEAM_UPLOADS_KV, prefix);
   const records = (await Promise.all(keys.map((item) => submissionRecord(env.STEAM_UPLOADS_KV, item, className))))
+    .filter((record) => selectedClasses.includes(record.className) && Number.isInteger(record.studentNo))
     .sort((a, b) => String(b.uploadedAt).localeCompare(String(a.uploadedAt)));
 
-  const submittedNumbers = new Set(records.map((record) => record.studentNo).filter(Boolean));
+  const submittedNumbers = new Set(records.map((record) => `${record.className}-${record.studentNo}`));
   const students = [];
-  for (let no = 1; no <= CLASS_LIMITS[className]; no += 1) {
-    students.push({ no, submitted: submittedNumbers.has(no) });
+  for (const selectedClass of selectedClasses) {
+    for (let no = 1; no <= CLASS_LIMITS[selectedClass]; no += 1) {
+      students.push({ className: selectedClass, no, submitted: submittedNumbers.has(`${selectedClass}-${no}`) });
+    }
   }
+  const totalStudents = selectedClasses.reduce((total, selectedClass) => total + CLASS_LIMITS[selectedClass], 0);
 
   return json({
     ok: true,
     className,
-    totalStudents: CLASS_LIMITS[className],
+    label: isAllClasses ? "全部班別" : className,
+    totalStudents,
     submittedCount: submittedNumbers.size,
-    missingCount: CLASS_LIMITS[className] - submittedNumbers.size,
+    missingCount: totalStudents - submittedNumbers.size,
     students,
     records
   });
@@ -169,7 +176,7 @@ async function submissionRecord(kv, item, className) {
   const meta = item.metadata || {};
   return {
     key: item.name,
-    className: record?.className || meta.className || className,
+    className: record?.className || meta.className || parseClassName(item.name) || className,
     studentNo: Number(record?.studentNo || meta.studentNo || parseStudentNo(item.name)),
     artifactType: record?.artifactType || "",
     originalName: record?.originalName || "",
@@ -222,6 +229,11 @@ async function listAllKeys(kv, prefix) {
 
 function checkTeacherPassword(password, env) {
   return Boolean(env.TEACHER_PW) && String(password || "") === env.TEACHER_PW;
+}
+
+function parseClassName(key) {
+  const parts = String(key || "").split("/");
+  return CLASS_LIMITS[parts[2]] ? parts[2] : "";
 }
 
 function parseStudentNo(key) {

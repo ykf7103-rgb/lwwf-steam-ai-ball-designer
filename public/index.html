@@ -208,6 +208,14 @@
       background: #fff;
       box-shadow: 0 14px 35px rgba(23, 33, 43, 0.08);
     }
+    .slide-zoom {
+      display: block;
+      width: 100%;
+      padding: 0;
+      border: 0;
+      background: transparent;
+      cursor: zoom-in;
+    }
     .slide-card img { display: block; width: 100%; aspect-ratio: 16 / 9; object-fit: cover; }
     .slide-caption { padding: 14px 16px 16px; }
     .slide-caption strong { display: block; font-size: 17px; }
@@ -285,7 +293,7 @@
 
     .teacher-tabs {
       display: grid;
-      grid-template-columns: repeat(4, 1fr);
+      grid-template-columns: 1.2fr repeat(4, 1fr);
       gap: 8px;
       margin: 16px 0;
     }
@@ -330,14 +338,15 @@
       font-size: 13px;
       font-weight: 900;
     }
+    .student-cell span { display: block; font-size: 12px; color: inherit; opacity: 0.84; }
     .student-cell.done { border-color: rgba(23, 138, 82, 0.4); background: #edf8f2; color: var(--good); }
     .student-cell.missing { background: #fff7f5; color: var(--warn); }
     .submissions-list { display: grid; gap: 10px; }
     .submission-item {
       display: grid;
-      grid-template-columns: 92px minmax(0, 1fr) auto;
-      gap: 12px;
-      align-items: center;
+      grid-template-columns: 94px 138px minmax(0, 1fr) auto;
+      gap: 14px;
+      align-items: stretch;
       padding: 12px;
       border: 1px solid var(--line);
       border-radius: 8px;
@@ -345,6 +354,70 @@
     }
     .submission-item strong { display: block; color: var(--teal-dark); }
     .submission-item span { display: block; color: var(--muted); font-size: 13px; overflow-wrap: anywhere; }
+    .submission-badge {
+      display: grid;
+      place-items: center;
+      min-height: 112px;
+      border-radius: 8px;
+      background: #102f37;
+      color: #fff;
+      text-align: center;
+    }
+    .submission-badge strong { color: #fff; font-size: 28px; line-height: 1; }
+    .submission-badge span { color: rgba(255, 255, 255, 0.86); font-size: 18px; font-weight: 900; }
+    .work-thumb {
+      position: relative;
+      display: grid;
+      place-items: center;
+      min-height: 112px;
+      overflow: hidden;
+      padding: 0;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #f7fafc;
+      color: var(--teal-dark);
+      cursor: zoom-in;
+      font-weight: 900;
+    }
+    .work-thumb img { width: 100%; height: 100%; min-height: 112px; object-fit: cover; }
+    .work-thumb span { padding: 10px; color: var(--teal-dark); text-align: center; }
+    .submission-meta { display: grid; align-content: center; gap: 4px; min-width: 0; }
+    .submission-meta strong { font-size: 19px; }
+    .submission-actions { display: flex; flex-direction: column; justify-content: center; gap: 8px; }
+
+    .image-modal {
+      position: fixed;
+      inset: 0;
+      z-index: 80;
+      display: grid;
+      grid-template-rows: auto minmax(0, 1fr) auto;
+      gap: 14px;
+      padding: 24px;
+      background: rgba(10, 18, 28, 0.88);
+    }
+    .image-modal[hidden] { display: none; }
+    .modal-close {
+      justify-self: end;
+      min-height: 42px;
+      padding: 8px 14px;
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      border-radius: 8px;
+      background: #fff;
+      color: var(--ink);
+      cursor: pointer;
+      font-weight: 900;
+    }
+    .image-modal img {
+      align-self: center;
+      justify-self: center;
+      max-width: min(100%, 1280px);
+      max-height: 78vh;
+      border-radius: 8px;
+      background: #fff;
+      box-shadow: var(--shadow);
+      object-fit: contain;
+    }
+    .modal-title { color: #fff; text-align: center; font-size: 18px; font-weight: 900; }
 
     .summary-table {
       width: 100%;
@@ -387,6 +460,7 @@
       .steps, .slide-grid, .fields, .class-row, .teacher-summary { grid-template-columns: 1fr; }
       .teacher-tabs { grid-template-columns: repeat(2, 1fr); }
       .submission-item { grid-template-columns: 1fr; }
+      .submission-actions { flex-direction: row; flex-wrap: wrap; }
       textarea { min-height: 230px; font-size: 16px; }
     }
 
@@ -455,7 +529,7 @@
           <p class="section-note">活動取材自工作紙：學生先認識球類運動，再用直徑描述球體大小，最後運用 AI 工具生成設計圖。</p>
         </div>
         <div class="steps">
-          <div class="step"><span class="step-num">1</span><strong>選擇球類</strong><p>足球、籃球、排球或創意球類。</p></div>
+          <div class="step"><span class="step-num">1</span><strong>選擇球類</strong><p>從多種球類或創意球類中選擇。</p></div>
           <div class="step"><span class="step-num">2</span><strong>找出資料</strong><p>記錄標準直徑和比賽人數。</p></div>
           <div class="step"><span class="step-num">3</span><strong>組合設計</strong><p>選擇材質、顏色、背景和風格。</p></div>
           <div class="step"><span class="step-num">4</span><strong>生成上載</strong><p>到 Gemini 生成圖片後交作品。</p></div>
@@ -472,14 +546,18 @@
         </div>
         <div class="slide-grid">
           <figure class="slide-card">
-            <img src="assets/teaching-slide-student-journey.png" alt="AI球類設計師學生流程教學簡報圖">
+            <button class="slide-zoom" type="button" data-full="assets/teaching-slide-student-journey.png" data-title="學生版：活動流程">
+              <img src="assets/teaching-slide-student-journey.png" alt="AI球類設計師學生流程教學簡報圖">
+            </button>
             <figcaption class="slide-caption">
               <strong>學生版：活動流程</strong>
               <span>選球類、量直徑、寫指令、生成作品。</span>
             </figcaption>
           </figure>
           <figure class="slide-card">
-            <img src="assets/teaching-slide-teacher-dashboard.png" alt="AI球類設計師老師檢視作品教學簡報圖">
+            <button class="slide-zoom" type="button" data-full="assets/teaching-slide-teacher-dashboard.png" data-title="老師版：交件檢視">
+              <img src="assets/teaching-slide-teacher-dashboard.png" alt="AI球類設計師老師檢視作品教學簡報圖">
+            </button>
             <figcaption class="slide-caption">
               <strong>老師版：交件檢視</strong>
               <span>輸入密碼、選擇班別、查看交件情況。</span>
@@ -505,6 +583,18 @@
                 <option value="足球">足球 Football</option>
                 <option value="籃球">籃球 Basketball</option>
                 <option value="排球">排球 Volleyball</option>
+                <option value="網球">網球 Tennis</option>
+                <option value="乒乓球">乒乓球 Table tennis</option>
+                <option value="羽毛球">羽毛球 Badminton</option>
+                <option value="手球">手球 Handball</option>
+                <option value="欖球">欖球 Rugby</option>
+                <option value="棒球">棒球 Baseball</option>
+                <option value="壘球">壘球 Softball</option>
+                <option value="曲棍球">曲棍球 Hockey ball</option>
+                <option value="高爾夫球">高爾夫球 Golf ball</option>
+                <option value="保齡球">保齡球 Bowling ball</option>
+                <option value="水球">水球 Water polo</option>
+                <option value="閃避球">閃避球 Dodgeball</option>
                 <option value="創意球">創意球 Original ball</option>
               </select>
             </div>
@@ -648,9 +738,10 @@
 
           <div class="teacher-card">
             <strong>班別交件總覽</strong>
-            <p>登入後點選 5A 至 5D，可即時看到該班哪些學號已交或未交。</p>
+            <p>登入後可查看全部班別或單一班別，清楚檢視每位同學的交件狀態和作品。</p>
             <div class="teacher-tabs" id="teacher-tabs" aria-label="選擇班別">
-              <button class="class-tab active" type="button" data-class="5A">5A</button>
+              <button class="class-tab active" type="button" data-class="all">全部</button>
+              <button class="class-tab" type="button" data-class="5A">5A</button>
               <button class="class-tab" type="button" data-class="5B">5B</button>
               <button class="class-tab" type="button" data-class="5C">5C</button>
               <button class="class-tab" type="button" data-class="5D">5D</button>
@@ -685,6 +776,12 @@
     <footer>樂善堂梁黃蕙芳紀念學校 | 2025/26 年度五年級數體STEAM跨科活動</footer>
   </div>
 
+  <div class="image-modal" id="image-modal" hidden>
+    <button class="modal-close" type="button" id="modal-close">關閉</button>
+    <img id="modal-image" src="" alt="">
+    <div class="modal-title" id="modal-title"></div>
+  </div>
+
   <script>
     const classLimits = { "5A": 26, "5B": 21, "5C": 28, "5D": 20 };
     const sportData = {
@@ -699,6 +796,54 @@
       "排球": {
         diameters: ["標準直徑約 21 cm", "自訂直徑 20 cm", "自訂直徑 22 cm"],
         players: ["每隊 6 名球員", "每隊 4 名球員", "每隊 5 名球員"]
+      },
+      "網球": {
+        diameters: ["標準直徑約 6.7 cm", "自訂直徑 6 cm", "自訂直徑 8 cm"],
+        players: ["單打每邊 1 名球員", "雙打每邊 2 名球員", "創意小隊每邊 3 名球員"]
+      },
+      "乒乓球": {
+        diameters: ["標準直徑約 4 cm", "自訂直徑 5 cm", "自訂直徑 8 cm"],
+        players: ["單打每邊 1 名球員", "雙打每邊 2 名球員", "創意小隊每邊 4 名球員"]
+      },
+      "羽毛球": {
+        diameters: ["球頭直徑約 2.6 cm", "自訂球頭直徑 3 cm", "自訂球頭直徑 4 cm"],
+        players: ["單打每邊 1 名球員", "雙打每邊 2 名球員", "創意小隊每邊 3 名球員"]
+      },
+      "手球": {
+        diameters: ["標準直徑約 18 cm", "自訂直徑 16 cm", "自訂直徑 20 cm"],
+        players: ["每隊 7 名球員", "每隊 5 名球員", "每隊 6 名球員"]
+      },
+      "欖球": {
+        diameters: ["長度約 28 cm、闊度約 18 cm", "自訂長度 24 cm", "自訂長度 32 cm"],
+        players: ["每隊 15 名球員", "每隊 7 名球員", "每隊 10 名球員"]
+      },
+      "棒球": {
+        diameters: ["標準直徑約 7.4 cm", "自訂直徑 8 cm", "自訂直徑 10 cm"],
+        players: ["每隊 9 名球員", "每隊 6 名球員", "每隊 12 名球員"]
+      },
+      "壘球": {
+        diameters: ["標準直徑約 9.7 cm", "自訂直徑 9 cm", "自訂直徑 11 cm"],
+        players: ["每隊 9 名球員", "每隊 6 名球員", "每隊 10 名球員"]
+      },
+      "曲棍球": {
+        diameters: ["標準直徑約 7.5 cm", "自訂直徑 8 cm", "自訂直徑 10 cm"],
+        players: ["每隊 11 名球員", "每隊 6 名球員", "每隊 8 名球員"]
+      },
+      "高爾夫球": {
+        diameters: ["標準直徑約 4.3 cm", "自訂直徑 5 cm", "自訂直徑 7 cm"],
+        players: ["個人比賽", "二人一組", "四人一組"]
+      },
+      "保齡球": {
+        diameters: ["標準直徑約 21.8 cm", "自訂直徑 18 cm", "自訂直徑 24 cm"],
+        players: ["個人比賽", "每隊 2 名球員", "每隊 4 名球員"]
+      },
+      "水球": {
+        diameters: ["標準直徑約 22 cm", "自訂直徑 20 cm", "自訂直徑 24 cm"],
+        players: ["每隊 7 名球員", "每隊 5 名球員", "每隊 6 名球員"]
+      },
+      "閃避球": {
+        diameters: ["標準直徑約 20 cm", "自訂直徑 18 cm", "自訂直徑 22 cm"],
+        players: ["每隊 6 名球員", "每隊 8 名球員", "每隊 10 名球員"]
       },
       "創意球": {
         diameters: ["自訂直徑 18 cm", "自訂直徑 21 cm", "自訂直徑 26 cm"],
@@ -724,9 +869,14 @@
     const studentGrid = document.querySelector("#student-grid");
     const submissionsList = document.querySelector("#submissions-list");
     const teacherTabs = document.querySelector("#teacher-tabs");
+    const imageModal = document.querySelector("#image-modal");
+    const modalImage = document.querySelector("#modal-image");
+    const modalTitle = document.querySelector("#modal-title");
+    const modalClose = document.querySelector("#modal-close");
 
     let teacherPassword = "";
-    let activeTeacherClass = "5A";
+    let activeTeacherClass = "all";
+    let activePreviewUrl = "";
 
     function fillSelect(select, values) {
       select.innerHTML = "";
@@ -815,6 +965,26 @@
       }
     }
 
+    function openImageModal(src, title) {
+      if (activePreviewUrl) URL.revokeObjectURL(activePreviewUrl);
+      activePreviewUrl = src.startsWith("blob:") ? src : "";
+      modalImage.src = src;
+      modalImage.alt = title || "放大圖片";
+      modalTitle.textContent = title || "";
+      imageModal.hidden = false;
+      modalClose.focus();
+    }
+
+    function closeImageModal() {
+      imageModal.hidden = true;
+      modalImage.removeAttribute("src");
+      modalTitle.textContent = "";
+      if (activePreviewUrl) {
+        URL.revokeObjectURL(activePreviewUrl);
+        activePreviewUrl = "";
+      }
+    }
+
     async function loadTeacherClass(className = activeTeacherClass) {
       if (!teacherPassword) {
         teacherStatus.classList.add("error");
@@ -823,8 +993,9 @@
       }
 
       activeTeacherClass = className;
+      const label = className === "all" ? "全部班別" : className;
       teacherStatus.classList.remove("error");
-      teacherStatus.textContent = `正在讀取 ${className}...`;
+      teacherStatus.textContent = `正在讀取 ${label}...`;
       teacherTabs.querySelectorAll(".class-tab").forEach((tab) => {
         tab.classList.toggle("active", tab.dataset.class === className);
       });
@@ -839,7 +1010,7 @@
         if (!response.ok || !result.ok) throw new Error(result.error || "未能讀取交件情況。");
         renderTeacherResults(result);
         teacherResults.hidden = false;
-        teacherStatus.textContent = `${className} 已更新。`;
+        teacherStatus.textContent = `${label} 已更新。`;
       } catch (error) {
         teacherStatus.classList.add("error");
         teacherStatus.textContent = error.message || "未能讀取交件情況。";
@@ -847,9 +1018,10 @@
     }
 
     function renderTeacherResults(data) {
+      const label = data.label || (data.className === "all" ? "全部班別" : data.className);
       const completion = data.totalStudents ? Math.round((data.submittedCount / data.totalStudents) * 100) : 0;
       teacherSummary.innerHTML = `
-        <div class="summary-pill"><span>班別</span><strong>${data.className}</strong></div>
+        <div class="summary-pill"><span>範圍</span><strong>${label}</strong></div>
         <div class="summary-pill"><span>已交</span><strong>${data.submittedCount}</strong></div>
         <div class="summary-pill"><span>未交</span><strong>${data.missingCount}</strong></div>
         <div class="summary-pill"><span>完成率</span><strong>${completion}%</strong></div>
@@ -857,22 +1029,35 @@
 
       studentGrid.innerHTML = data.students.map((student) => `
         <div class="student-cell ${student.submitted ? "done" : "missing"}">
-          ${student.no}號<br>${student.submitted ? "已交" : "未交"}
+          ${student.className ? `${student.className} ` : ""}${student.no}號
+          <span>${student.submitted ? "已交" : "未交"}</span>
         </div>
       `).join("");
 
       submissionsList.innerHTML = data.records.length
         ? data.records.map((record) => `
           <article class="submission-item">
-            <strong>${record.className} ${record.studentNo}號</strong>
-            <div>
+            <div class="submission-badge">
+              <div>
+                <strong>${record.className}</strong>
+                <span>${record.studentNo}號</span>
+              </div>
+            </div>
+            <button class="work-thumb" type="button" data-preview="${encodeURIComponent(record.key)}" data-name="${encodeURIComponent(record.originalName || "student-work")}" data-type="${encodeURIComponent(record.contentType || "")}">
+              ${isImageRecord(record) ? `<span>點擊預覽圖片</span>` : `<span>${fileTypeLabel(record.contentType)}</span>`}
+            </button>
+            <div class="submission-meta">
+              <strong>${record.className} ${record.studentNo}號 · ${record.artifactType || "作品"}</strong>
               <span>${record.artifactType || "作品"} · ${record.originalName || "未命名檔案"}</span>
               <span>${formatTime(record.uploadedAt)}</span>
             </div>
-            <button class="button ghost" type="button" data-download="${encodeURIComponent(record.key)}" data-name="${encodeURIComponent(record.originalName || "student-work")}">下載</button>
+            <div class="submission-actions">
+              <button class="button secondary" type="button" data-preview="${encodeURIComponent(record.key)}" data-name="${encodeURIComponent(record.originalName || "student-work")}" data-type="${encodeURIComponent(record.contentType || "")}">預覽</button>
+              <button class="button ghost" type="button" data-download="${encodeURIComponent(record.key)}" data-name="${encodeURIComponent(record.originalName || "student-work")}">下載</button>
+            </div>
           </article>
         `).join("")
-        : `<div class="teacher-card"><strong>暫未有作品</strong><p>${data.className} 尚未有學生上載作品。</p></div>`;
+        : `<div class="teacher-card"><strong>暫未有作品</strong><p>${label} 尚未有學生上載作品。</p></div>`;
     }
 
     function formatTime(value) {
@@ -880,28 +1065,65 @@
       return new Date(value).toLocaleString("zh-HK", { hour12: false });
     }
 
+    function isImageRecord(record) {
+      return String(record.contentType || "").startsWith("image/");
+    }
+
+    function fileTypeLabel(contentType) {
+      const type = String(contentType || "");
+      if (type.includes("pdf")) return "PDF";
+      if (type.includes("wordprocessingml") || type.includes("msword")) return "Word";
+      return "檔案";
+    }
+
+    async function fetchSubmissionBlob(key) {
+      const response = await fetch("/api/download", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ password: teacherPassword, key })
+      });
+      if (!response.ok) {
+        const result = await response.json().catch(() => ({}));
+        throw new Error(result.error || "未能讀取作品。");
+      }
+      return response.blob();
+    }
+
+    function saveBlob(blob, filename) {
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = filename || "student-work";
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(url);
+    }
+
+    async function previewSubmission(key, filename, contentType) {
+      teacherStatus.classList.remove("error");
+      teacherStatus.textContent = "正在開啟作品預覽...";
+      try {
+        const blob = await fetchSubmissionBlob(key);
+        if (!String(contentType || blob.type || "").startsWith("image/")) {
+          teacherStatus.textContent = "這份作品不是圖片，已改為下載檢視。";
+          saveBlob(blob, filename || "student-work");
+          return;
+        }
+        openImageModal(URL.createObjectURL(blob), filename || "學生作品");
+        teacherStatus.textContent = "圖片預覽已開啟。";
+      } catch (error) {
+        teacherStatus.classList.add("error");
+        teacherStatus.textContent = error.message || "未能預覽作品。";
+      }
+    }
+
     async function downloadSubmission(key, filename) {
       teacherStatus.classList.remove("error");
       teacherStatus.textContent = "正在下載作品...";
       try {
-        const response = await fetch("/api/download", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ password: teacherPassword, key })
-        });
-        if (!response.ok) {
-          const result = await response.json().catch(() => ({}));
-          throw new Error(result.error || "未能下載作品。");
-        }
-        const blob = await response.blob();
-        const url = URL.createObjectURL(blob);
-        const link = document.createElement("a");
-        link.href = url;
-        link.download = filename || "student-work";
-        document.body.appendChild(link);
-        link.click();
-        link.remove();
-        URL.revokeObjectURL(url);
+        const blob = await fetchSubmissionBlob(key);
+        saveBlob(blob, filename || "student-work");
         teacherStatus.textContent = "已開始下載。";
       } catch (error) {
         teacherStatus.classList.add("error");
@@ -924,8 +1146,27 @@
       if (tab) loadTeacherClass(tab.dataset.class);
     });
     submissionsList.addEventListener("click", (event) => {
-      const button = event.target.closest("[data-download]");
-      if (button) downloadSubmission(decodeURIComponent(button.dataset.download), decodeURIComponent(button.dataset.name));
+      const previewButton = event.target.closest("[data-preview]");
+      if (previewButton) {
+        previewSubmission(
+          decodeURIComponent(previewButton.dataset.preview),
+          decodeURIComponent(previewButton.dataset.name),
+          decodeURIComponent(previewButton.dataset.type || "")
+        );
+        return;
+      }
+      const downloadButton = event.target.closest("[data-download]");
+      if (downloadButton) downloadSubmission(decodeURIComponent(downloadButton.dataset.download), decodeURIComponent(downloadButton.dataset.name));
+    });
+    document.querySelectorAll(".slide-zoom").forEach((button) => {
+      button.addEventListener("click", () => openImageModal(button.dataset.full, button.dataset.title));
+    });
+    modalClose.addEventListener("click", closeImageModal);
+    imageModal.addEventListener("click", (event) => {
+      if (event.target === imageModal) closeImageModal();
+    });
+    document.addEventListener("keydown", (event) => {
+      if (event.key === "Escape" && !imageModal.hidden) closeImageModal();
     });
 
     updateSportFields();
