@@ -13,6 +13,8 @@
 - `src/worker.js`：Cloudflare Worker 上載端點
 - `wrangler.toml`：Cloudflare 部署設定
 - `public/assets/hero-ai-ball-designer.png`：AI 生成主視覺
+- `public/assets/teaching-slide-student-journey.png`：16:9 學生流程教學簡報圖
+- `public/assets/teaching-slide-teacher-dashboard.png`：16:9 老師檢視教學簡報圖
 - `public/assets/lwwf-logo.png`：學校校章
 
 ## 班別學號
@@ -56,3 +58,7 @@ steam-ai-ball-designer/2025-26/5A/01/
 ```
 
 目前使用 KV 儲存檔案和 metadata，學生作品大小限制為 10MB。Cloudflare 帳戶日後啟用 R2 後，可再轉成 R2 儲存。
+
+## 老師檢視
+
+老師在網頁輸入密碼後，可按 `5A`、`5B`、`5C`、`5D` 查看交件情況、未交學號和作品清單。老師密碼已以 Cloudflare Secret `TEACHER_PW` 儲存，不寫入前端程式碼。

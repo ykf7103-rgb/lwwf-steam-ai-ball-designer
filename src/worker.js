@@ -29,8 +29,12 @@ export default {
       return handleUpload(request, env);
     }
 
-    if (url.pathname === "/api/download" && request.method === "GET") {
-      return handleDownload(url, env);
+    if (url.pathname === "/api/submissions" && request.method === "POST") {
+      return handleSubmissions(request, env);
+    }
+
+    if (url.pathname === "/api/download" && request.method === "POST") {
+      return handleDownload(request, env);
     }
 
     if (url.pathname.startsWith("/api/")) {
@@ -109,9 +113,7 @@ async function handleUpload(request, env) {
     metadata: {
       className,
       studentNo: String(studentNo),
-      artifactType,
-      originalName: record.originalName,
-      contentType: record.contentType,
+      size: String(record.size),
       uploadedAt: record.uploadedAt
     }
   });
@@ -125,12 +127,69 @@ async function handleUpload(request, env) {
   });
 }
 
-async function handleDownload(url, env) {
+async function handleSubmissions(request, env) {
   if (!env.STEAM_UPLOADS_KV) {
     return json({ ok: false, error: "作品上載空間尚未設定。" }, 500);
   }
 
-  const key = url.searchParams.get("key");
+  const body = await request.json().catch(() => ({}));
+  if (!checkTeacherPassword(body.password, env)) {
+    return json({ ok: false, error: "老師密碼不正確。" }, 401);
+  }
+
+  const className = cleanText(body.className || "5A");
+  if (!CLASS_LIMITS[className]) {
+    return json({ ok: false, error: "請選擇正確班別。" }, 400);
+  }
+
+  const prefix = `steam-ai-ball-designer/2025-26/${className}/`;
+  const keys = await listAllKeys(env.STEAM_UPLOADS_KV, prefix);
+  const records = (await Promise.all(keys.map((item) => submissionRecord(env.STEAM_UPLOADS_KV, item, className))))
+    .sort((a, b) => String(b.uploadedAt).localeCompare(String(a.uploadedAt)));
+
+  const submittedNumbers = new Set(records.map((record) => record.studentNo).filter(Boolean));
+  const students = [];
+  for (let no = 1; no <= CLASS_LIMITS[className]; no += 1) {
+    students.push({ no, submitted: submittedNumbers.has(no) });
+  }
+
+  return json({
+    ok: true,
+    className,
+    totalStudents: CLASS_LIMITS[className],
+    submittedCount: submittedNumbers.size,
+    missingCount: CLASS_LIMITS[className] - submittedNumbers.size,
+    students,
+    records
+  });
+}
+
+async function submissionRecord(kv, item, className) {
+  const record = await kv.get(item.name, "json");
+  const meta = item.metadata || {};
+  return {
+    key: item.name,
+    className: record?.className || meta.className || className,
+    studentNo: Number(record?.studentNo || meta.studentNo || parseStudentNo(item.name)),
+    artifactType: record?.artifactType || "",
+    originalName: record?.originalName || "",
+    contentType: record?.contentType || "",
+    size: Number(record?.size || meta.size || 0),
+    uploadedAt: record?.uploadedAt || meta.uploadedAt || ""
+  };
+}
+
+async function handleDownload(request, env) {
+  if (!env.STEAM_UPLOADS_KV) {
+    return json({ ok: false, error: "作品上載空間尚未設定。" }, 500);
+  }
+
+  const body = await request.json().catch(() => ({}));
+  if (!checkTeacherPassword(body.password, env)) {
+    return json({ ok: false, error: "老師密碼不正確。" }, 401);
+  }
+
+  const key = cleanText(body.key, 500);
   if (!key || !key.startsWith("steam-ai-ball-designer/2025-26/")) {
     return json({ ok: false, error: "缺少作品編號。" }, 400);
   }
@@ -148,6 +207,26 @@ async function handleDownload(url, env) {
       ...corsHeaders()
     }
   });
+}
+
+async function listAllKeys(kv, prefix) {
+  const keys = [];
+  let cursor;
+  do {
+    const page = await kv.list({ prefix, cursor, limit: 1000 });
+    keys.push(...page.keys);
+    cursor = page.list_complete ? undefined : page.cursor;
+  } while (cursor);
+  return keys;
+}
+
+function checkTeacherPassword(password, env) {
+  return Boolean(env.TEACHER_PW) && String(password || "") === env.TEACHER_PW;
+}
+
+function parseStudentNo(key) {
+  const parts = String(key || "").split("/");
+  return Number(parts[3] || 0);
 }
 
 function cleanText(value, max = 300) {
