@@ -250,6 +250,11 @@
     }
     select, input { min-height: 48px; padding: 9px 12px; }
     input[type="file"] { padding-top: 12px; }
+    .custom-input[hidden] { display: none; }
+    .custom-input {
+      border-color: #9fb5c8;
+      background: #fbfdff;
+    }
     textarea {
       min-height: 250px;
       resize: vertical;
@@ -689,14 +694,24 @@
                 <option value="水球">水球 Water polo</option>
                 <option value="閃避球">閃避球 Dodgeball</option>
                 <option value="創意球">創意球 Original ball</option>
+                <option value="__custom__">自訂球類</option>
               </select>
+              <input class="custom-input" id="custom-sport" type="text" placeholder="輸入自訂球類，例如：彩虹能量球" hidden>
             </div>
-            <div class="field"><label for="diameter">半徑資料</label><select id="diameter" name="diameter"></select></div>
+            <div class="field">
+              <label for="diameter">半徑資料</label>
+              <select id="diameter" name="diameter"></select>
+              <input class="custom-input" id="custom-radius" type="number" inputmode="decimal" step="0.1" min="0" placeholder="輸入自訂半徑，例如 9" hidden>
+            </div>
             <div class="field">
               <label for="diameter-answer">請回答「直徑」是多少？（cm，純數字）</label>
               <input id="diameter-answer" name="diameter-answer" type="number" inputmode="decimal" step="0.1" min="0" placeholder="例如 22" />
             </div>
-            <div class="field"><label for="players">比賽人數</label><select id="players" name="players"></select></div>
+            <div class="field">
+              <label for="players">比賽人數</label>
+              <select id="players" name="players"></select>
+              <input class="custom-input" id="custom-players" type="text" placeholder="輸入自訂人數，例如：每隊 4 名球員" hidden>
+            </div>
             <div class="field">
               <label for="material">材質</label>
               <select id="material" name="material">
@@ -706,7 +721,9 @@
                 <option>霓虹燈光紋理</option>
                 <option>火焰能量</option>
                 <option>柔軟皮革</option>
+                <option value="__custom__">自訂材質</option>
               </select>
+              <input class="custom-input" id="custom-material" type="text" placeholder="輸入自訂材質，例如：閃亮橡膠" hidden>
             </div>
             <div class="field">
               <label for="color">顏色</label>
@@ -717,7 +734,9 @@
                 <option>透明藍綠色</option>
                 <option>紅色和銀色</option>
                 <option>校園綠和金色</option>
+                <option value="__custom__">自訂顏色</option>
               </select>
+              <input class="custom-input" id="custom-color" type="text" placeholder="輸入自訂顏色，例如：紫色和金色" hidden>
             </div>
             <div class="field">
               <label for="style">風格</label>
@@ -728,7 +747,9 @@
                 <option>古代遺物</option>
                 <option>運動海報</option>
                 <option>玩具模型</option>
+                <option value="__custom__">自訂風格</option>
               </select>
+              <input class="custom-input" id="custom-style" type="text" placeholder="輸入自訂風格，例如：水墨畫風" hidden>
             </div>
             <div class="field full">
               <label for="background">背景</label>
@@ -739,7 +760,9 @@
                 <option>水晶洞穴</option>
                 <option>陽光草地</option>
                 <option>簡潔白色展示台</option>
+                <option value="__custom__">自訂背景</option>
               </select>
+              <input class="custom-input" id="custom-background" type="text" placeholder="輸入自訂背景，例如：海底運動場" hidden>
             </div>
           </form>
 
@@ -1016,6 +1039,10 @@
     const sportSelect = document.querySelector("#sport");
     const diameterSelect = document.querySelector("#diameter");
     const playersSelect = document.querySelector("#players");
+    const materialSelect = document.querySelector("#material");
+    const colorSelect = document.querySelector("#color");
+    const styleSelect = document.querySelector("#style");
+    const backgroundSelect = document.querySelector("#background");
     const diameterAnswerInput = document.querySelector("#diameter-answer");
     const promptOutput = document.querySelector("#prompt-output");
     const copyButton = document.querySelector("#copy-prompt");
@@ -1047,9 +1074,28 @@
     const PROMPT_NAME_AND_DIMENSION_REQUIREMENT = "圖片上要顯示半徑及直徑長度，及要給予一個中文命名。";
     const PROMPT_LOCKED_MESSAGE = "請先根據半徑資料，回答正確「直徑」數字。答對後才會顯示完整 Gemini 指令。";
     const DIAMETER_ANSWER_TOLERANCE = 0.001;
+    const CUSTOM_OPTION_VALUE = "__custom__";
+    const customInputs = {
+      sport: document.querySelector("#custom-sport"),
+      diameter: document.querySelector("#custom-radius"),
+      players: document.querySelector("#custom-players"),
+      material: document.querySelector("#custom-material"),
+      color: document.querySelector("#custom-color"),
+      style: document.querySelector("#custom-style"),
+      background: document.querySelector("#custom-background")
+    };
+    const customSelects = {
+      sport: sportSelect,
+      diameter: diameterSelect,
+      players: playersSelect,
+      material: materialSelect,
+      color: colorSelect,
+      style: styleSelect,
+      background: backgroundSelect
+    };
     let currentPromptText = "";
 
-    function fillSelect(select, values) {
+    function fillSelect(select, values, customLabel = "自訂") {
       select.innerHTML = "";
       values.forEach((value) => {
         const option = document.createElement("option");
@@ -1057,6 +1103,10 @@
         option.textContent = value;
         select.appendChild(option);
       });
+      const customOption = document.createElement("option");
+      customOption.value = CUSTOM_OPTION_VALUE;
+      customOption.textContent = customLabel;
+      select.appendChild(customOption);
     }
 
     function normalizeDiameterEntry(entry) {
@@ -1080,7 +1130,17 @@
     }
 
     function getDiameterEntryForSelectedSport() {
-      const data = sportData[sportSelect.value];
+      if (diameterSelect.value === CUSTOM_OPTION_VALUE) {
+        const radius = getCustomRadiusValue();
+        return {
+          label: Number.isFinite(radius) ? `自訂半徑 ${formatDimension(radius)} cm` : "自訂半徑",
+          radius,
+          diameter: Number.isFinite(radius) ? radius * 2 : NaN,
+          promptLabel: ""
+        };
+      }
+
+      const data = getSportDataForSelectedSport();
       if (!data || !Array.isArray(data.diameters)) return null;
       const index = Number(diameterSelect.value);
       return normalizeDiameterEntry(data.diameters[index]) || normalizeDiameterEntry(data.diameters[0]);
@@ -1116,16 +1176,22 @@
         option.dataset.prompt = item.promptLabel || "";
         diameterSelect.appendChild(option);
       });
+      const customOption = document.createElement("option");
+      customOption.value = CUSTOM_OPTION_VALUE;
+      customOption.textContent = "自訂半徑";
+      diameterSelect.appendChild(customOption);
     }
 
     function updateSportFields() {
-      const data = sportData[sportSelect.value];
+      updateCustomInputsVisibility();
+      const data = getSportDataForSelectedSport();
       if (!data) return;
       fillDiameterSelect(data.diameters);
-      fillSelect(playersSelect, data.players);
+      fillSelect(playersSelect, data.players, "自訂人數");
       if (diameterAnswerInput) {
         diameterAnswerInput.value = "";
       }
+      updateCustomInputsVisibility();
       updatePrompt();
     }
 
@@ -1144,14 +1210,63 @@
       return new FormData(promptForm).get(name);
     }
 
+    function getSportDataForSelectedSport() {
+      return sportData[sportSelect.value] || sportData["創意球"];
+    }
+
+    function isCustomSelected(select) {
+      return select?.value === CUSTOM_OPTION_VALUE;
+    }
+
+    function getCustomText(name) {
+      return String(customInputs[name]?.value || "").trim();
+    }
+
+    function getCustomRadiusValue() {
+      const radius = Number(getCustomText("diameter"));
+      return Number.isFinite(radius) && radius > 0 ? radius : NaN;
+    }
+
+    function getFieldValue(name, fallback = "") {
+      const select = customSelects[name];
+      if (isCustomSelected(select)) return getCustomText(name) || fallback;
+      return String(formValue(name) || fallback);
+    }
+
+    function updateCustomInputsVisibility() {
+      Object.entries(customSelects).forEach(([name, select]) => {
+        const input = customInputs[name];
+        if (!select || !input) return;
+        const shouldShow = isCustomSelected(select);
+        input.hidden = !shouldShow;
+        input.required = shouldShow;
+      });
+    }
+
+    function areCustomInputsReady() {
+      return Object.entries(customSelects).every(([name, select]) => {
+        if (!isCustomSelected(select)) return true;
+        if (name === "diameter") return Number.isFinite(getCustomRadiusValue());
+        return Boolean(getCustomText(name));
+      });
+    }
+
+    function getLockedPromptMessage() {
+      if (!areCustomInputsReady()) {
+        return "請先填寫所有自訂內容，然後回答正確「直徑」數字。答對後才會顯示完整 Gemini 指令。";
+      }
+      return PROMPT_LOCKED_MESSAGE;
+    }
+
     function updatePrompt() {
-      const sport = formValue("sport");
+      updateCustomInputsVisibility();
+      const sport = getFieldValue("sport", "自訂球類");
       const diameter = getDiameterDisplayText();
-      const players = formValue("players");
-      const material = formValue("material");
-      const color = formValue("color");
-      const style = formValue("style");
-      const background = formValue("background");
+      const players = getFieldValue("players", "自訂人數");
+      const material = getFieldValue("material", "自訂材質");
+      const color = getFieldValue("color", "自訂顏色");
+      const style = getFieldValue("style", "自訂風格");
+      const background = getFieldValue("background", "自訂背景");
       const generatedPrompt = `請生成一幅${style}風格的專屬球類設計圖：主角是一個${sport}，${diameter}，適合${players}的球類活動。球的材質是${material}，主要顏色是${color}，背景是${background}。請突出球體的圓形、直徑感和創意運動設計，畫面清晰、有立體感、適合小學生STEAM作品展示。不要加入文字、水印或品牌標誌。`;
       currentPromptText = enforcePromptRequirement(generatedPrompt);
       document.querySelector("#chip-sport").textContent = sport;
@@ -1179,13 +1294,19 @@
     }
 
     function updateCopyAvailability() {
-      const canCopy = isDiameterAnswerCorrect();
+      const customReady = areCustomInputsReady();
+      const canCopy = customReady && isDiameterAnswerCorrect();
       copyButton.disabled = !canCopy;
-      copyButton.title = canCopy ? "複製指令" : "請先答對「直徑」後再複製";
-      promptOutput.value = canCopy ? currentPromptText : PROMPT_LOCKED_MESSAGE;
+      copyButton.title = canCopy ? "複製指令" : (customReady ? "請先答對「直徑」後再複製" : "請先填寫所有自訂內容");
+      promptOutput.value = canCopy ? currentPromptText : getLockedPromptMessage();
     }
 
     async function copyPrompt() {
+      if (!areCustomInputsReady()) {
+        copyStatus.classList.add("error");
+        copyStatus.textContent = "請先填寫所有自訂內容。";
+        return;
+      }
       if (!isDiameterAnswerCorrect()) {
         copyStatus.classList.add("error");
         copyStatus.textContent = "請先答對「直徑」後，才能複製完整提示詞。";
@@ -1232,13 +1353,13 @@
         formData.append("file", uploadFile, uploadFile.name);
       }
       formData.append("prompt", currentPromptText);
-      formData.append("sport", formValue("sport"));
+      formData.append("sport", getFieldValue("sport", "自訂球類"));
       formData.append("diameter", getDiameterDisplayText() || "");
-      formData.append("players", formValue("players"));
-      formData.append("material", formValue("material"));
-      formData.append("color", formValue("color"));
-      formData.append("style", formValue("style"));
-      formData.append("background", formValue("background"));
+      formData.append("players", getFieldValue("players", "自訂人數"));
+      formData.append("material", getFieldValue("material", "自訂材質"));
+      formData.append("color", getFieldValue("color", "自訂顏色"));
+      formData.append("style", getFieldValue("style", "自訂風格"));
+      formData.append("background", getFieldValue("background", "自訂背景"));
 
       try {
         const response = await fetch("/api/upload", { method: "POST", body: formData });
@@ -1549,6 +1670,15 @@
         diameterAnswerInput.value = "";
       }
       updatePrompt();
+    });
+    Object.entries(customInputs).forEach(([name, input]) => {
+      if (!input) return;
+      input.addEventListener("input", () => {
+        if (name === "diameter" && diameterAnswerInput) {
+          diameterAnswerInput.value = "";
+        }
+        updatePrompt();
+      });
     });
     diameterAnswerInput?.addEventListener("input", updateCopyAvailability);
     diameterAnswerInput?.addEventListener("change", updateCopyAvailability);
