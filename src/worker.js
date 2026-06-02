@@ -12,6 +12,7 @@ const ALLOWED_TYPES = [
   /^application\/msword$/,
   /^application\/vnd\.openxmlformats-officedocument\.wordprocessingml\.document$/
 ];
+const PROMPT_NAME_AND_DIMENSION_REQUIREMENT = "\u5716\u7247\u4e0a\u8981\u986f\u793a\u534a\u5f91\u53ca\u76f4\u5f91\u9577\u5ea6\uff0c\u53ca\u8981\u7d66\u4e88\u4e00\u500b\u4e2d\u6587\u547d\u540d\u3002";
 
 export default {
   async fetch(request, env) {
@@ -58,7 +59,7 @@ async function handleUpload(request, env) {
   const className = cleanText(form.get("className"));
   const studentNo = Number(form.get("studentNo"));
   const artifactType = cleanText(form.get("artifactType"));
-  const prompt = cleanText(form.get("prompt"), 1600);
+  const prompt = ensurePromptRequirement(cleanText(form.get("prompt"), 1600));
   const file = form.get("file");
 
   if (!CLASS_LIMITS[className]) {
@@ -247,6 +248,13 @@ function cleanText(value, max = 300) {
     .replace(/\s+/g, " ")
     .trim()
     .slice(0, max);
+}
+
+function ensurePromptRequirement(prompt) {
+  const text = String(prompt || "");
+  return text.includes(PROMPT_NAME_AND_DIMENSION_REQUIREMENT)
+    ? text
+    : `${text}\n\n${PROMPT_NAME_AND_DIMENSION_REQUIREMENT}`;
 }
 
 function getExtension(name, type) {

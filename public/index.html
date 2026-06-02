@@ -111,6 +111,13 @@
       fill: none;
       flex: 0 0 auto;
     }
+    .button:disabled,
+    .button[disabled] {
+      cursor: not-allowed;
+      opacity: 0.55;
+      box-shadow: none;
+      transform: none;
+    }
 
     .hero {
       display: grid;
@@ -341,35 +348,91 @@
     .student-cell span { display: block; font-size: 12px; color: inherit; opacity: 0.84; }
     .student-cell.done { border-color: rgba(23, 138, 82, 0.4); background: #edf8f2; color: var(--good); }
     .student-cell.missing { background: #fff7f5; color: var(--warn); }
-    .submissions-list { display: grid; gap: 10px; }
+    .submissions-list {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+      gap: 12px;
+      align-items: stretch;
+    }
     .submission-item {
       display: grid;
-      grid-template-columns: 94px 138px minmax(0, 1fr) auto;
-      gap: 14px;
-      align-items: stretch;
+      gap: 10px;
       padding: 12px;
       border: 1px solid var(--line);
       border-radius: 8px;
       background: #fff;
     }
+    .submission-item:hover {
+      border-color: #c0d7d6;
+    }
     .submission-item strong { display: block; color: var(--teal-dark); }
     .submission-item span { display: block; color: var(--muted); font-size: 13px; overflow-wrap: anywhere; }
+    .submission-title {
+      display: grid;
+      gap: 6px;
+      padding-bottom: 6px;
+      border-bottom: 1px solid var(--line);
+    }
+    .submission-title strong {
+      font-size: 18px;
+    }
+
+    .submission-title span {
+      margin: 0;
+      color: var(--ink);
+      font-size: 13px;
+    }
+    .submission-meta {
+      display: grid;
+      align-content: center;
+      gap: 4px;
+      min-width: 0;
+      padding-top: 6px;
+      border-top: 1px solid var(--line);
+    }
+
+    .submission-meta strong {
+      color: #253444;
+      font-size: 16px;
+      margin: 0;
+    }
+
+    .submission-meta span {
+      color: var(--muted);
+      font-size: 13px;
+      margin: 0;
+    }
+
+    .submission-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .submission-actions .button {
+      width: 100%;
+      justify-content: center;
+      min-height: 40px;
+    }
+    .submission-actions .button + .button {
+      margin-top: 0;
+    }
     .submission-badge {
       display: grid;
       place-items: center;
-      min-height: 112px;
+      min-height: 52px;
       border-radius: 8px;
       background: #102f37;
       color: #fff;
       text-align: center;
     }
-    .submission-badge strong { color: #fff; font-size: 28px; line-height: 1; }
-    .submission-badge span { color: rgba(255, 255, 255, 0.86); font-size: 18px; font-weight: 900; }
+    .submission-badge strong { color: #fff; font-size: 20px; line-height: 1; }
+    .submission-badge span { color: rgba(255, 255, 255, 0.86); font-size: 13px; font-weight: 900; }
     .work-thumb {
       position: relative;
       display: grid;
       place-items: center;
-      min-height: 112px;
+      min-height: 180px;
+      aspect-ratio: 4 / 3;
       overflow: hidden;
       padding: 0;
       border: 1px solid var(--line);
@@ -379,11 +442,41 @@
       cursor: zoom-in;
       font-weight: 900;
     }
-    .work-thumb img { width: 100%; height: 100%; min-height: 112px; object-fit: cover; }
-    .work-thumb span { padding: 10px; color: var(--teal-dark); text-align: center; }
-    .submission-meta { display: grid; align-content: center; gap: 4px; min-width: 0; }
-    .submission-meta strong { font-size: 19px; }
-    .submission-actions { display: flex; flex-direction: column; justify-content: center; gap: 8px; }
+    .work-thumb img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      background: #f7fafc;
+      padding: 2px;
+    }
+    .work-thumb span {
+      padding: 12px;
+      color: var(--teal-dark);
+      text-align: center;
+      font-size: 13px;
+    }
+    .work-thumb::after {
+      content: "";
+      position: absolute;
+      inset: auto 0 0 0;
+      height: 30px;
+      background: linear-gradient(180deg, transparent, rgba(0, 0, 0, 0.55));
+      color: #fff;
+      font-size: 12px;
+      font-weight: 900;
+      display: grid;
+      align-items: center;
+      justify-items: center;
+      color: transparent;
+      pointer-events: none;
+      transition: opacity 0.2s ease;
+      opacity: 0;
+    }
+    .work-thumb:hover::after {
+      content: "點擊放大";
+      color: #fff;
+      opacity: 1;
+    }
 
     .image-modal {
       position: fixed;
@@ -598,7 +691,11 @@
                 <option value="創意球">創意球 Original ball</option>
               </select>
             </div>
-            <div class="field"><label for="diameter">直徑資料</label><select id="diameter" name="diameter"></select></div>
+            <div class="field"><label for="diameter">半徑資料</label><select id="diameter" name="diameter"></select></div>
+            <div class="field">
+              <label for="diameter-answer">請回答「直徑」是多少？（cm，純數字）</label>
+              <input id="diameter-answer" name="diameter-answer" type="number" inputmode="decimal" step="0.1" min="0" placeholder="例如 22" />
+            </div>
             <div class="field"><label for="players">比賽人數</label><select id="players" name="players"></select></div>
             <div class="field">
               <label for="material">材質</label>
@@ -655,7 +752,7 @@
               <span class="chip" id="chip-players">人數</span>
             </div>
             <div class="prompt-actions">
-              <button class="button" type="button" id="copy-prompt">
+              <button class="button" type="button" id="copy-prompt" disabled>
                 <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2"></rect><rect x="2" y="2" width="13" height="13" rx="2"></rect></svg>
                 複製指令
               </button>
@@ -786,67 +883,131 @@
     const classLimits = { "5A": 26, "5B": 21, "5C": 28, "5D": 20 };
     const sportData = {
       "足球": {
-        diameters: ["標準直徑約 22 cm", "自訂直徑 20 cm", "自訂直徑 24 cm"],
+        diameters: [
+          { label: "標準半徑 11 cm", radius: 11, diameter: 22 },
+          { label: "自訂半徑 10 cm", radius: 10, diameter: 20 },
+          { label: "自訂半徑 12 cm", radius: 12, diameter: 24 }
+        ],
         players: ["每隊 11 名球員", "每隊 5 名球員", "每隊 7 名球員"]
       },
       "籃球": {
-        diameters: ["標準直徑約 24 cm", "自訂直徑 22 cm", "自訂直徑 25 cm"],
+        diameters: [
+          { label: "標準半徑 12 cm", radius: 12, diameter: 24 },
+          { label: "自訂半徑 11 cm", radius: 11, diameter: 22 },
+          { label: "自訂半徑 12.5 cm", radius: 12.5, diameter: 25 }
+        ],
         players: ["每隊 5 名球員", "每隊 3 名球員", "每隊 6 名球員"]
       },
       "排球": {
-        diameters: ["標準直徑約 21 cm", "自訂直徑 20 cm", "自訂直徑 22 cm"],
+        diameters: [
+          { label: "標準半徑 10.5 cm", radius: 10.5, diameter: 21 },
+          { label: "自訂半徑 10 cm", radius: 10, diameter: 20 },
+          { label: "自訂半徑 11 cm", radius: 11, diameter: 22 }
+        ],
         players: ["每隊 6 名球員", "每隊 4 名球員", "每隊 5 名球員"]
       },
       "網球": {
-        diameters: ["標準直徑約 6.7 cm", "自訂直徑 6 cm", "自訂直徑 8 cm"],
+        diameters: [
+          { label: "標準半徑 3.35 cm", radius: 3.35, diameter: 6.7 },
+          { label: "自訂半徑 3 cm", radius: 3, diameter: 6 },
+          { label: "自訂半徑 4 cm", radius: 4, diameter: 8 }
+        ],
         players: ["單打每邊 1 名球員", "雙打每邊 2 名球員", "創意小隊每邊 3 名球員"]
       },
       "乒乓球": {
-        diameters: ["標準直徑約 4 cm", "自訂直徑 5 cm", "自訂直徑 8 cm"],
+        diameters: [
+          { label: "標準半徑 2 cm", radius: 2, diameter: 4 },
+          { label: "自訂半徑 2.5 cm", radius: 2.5, diameter: 5 },
+          { label: "自訂半徑 4 cm", radius: 4, diameter: 8 }
+        ],
         players: ["單打每邊 1 名球員", "雙打每邊 2 名球員", "創意小隊每邊 4 名球員"]
       },
       "羽毛球": {
-        diameters: ["球頭直徑約 2.6 cm", "自訂球頭直徑 3 cm", "自訂球頭直徑 4 cm"],
+        diameters: [
+          { label: "標準半徑 1.3 cm", radius: 1.3, diameter: 2.6, promptLabel: "球頭半徑約 1.3 cm，球頭直徑約 2.6 cm" },
+          { label: "自訂半徑 1.5 cm", radius: 1.5, diameter: 3, promptLabel: "球頭半徑約 1.5 cm，球頭直徑約 3 cm" },
+          { label: "自訂半徑 2 cm", radius: 2, diameter: 4, promptLabel: "球頭半徑約 2 cm，球頭直徑約 4 cm" }
+        ],
         players: ["單打每邊 1 名球員", "雙打每邊 2 名球員", "創意小隊每邊 3 名球員"]
       },
       "手球": {
-        diameters: ["標準直徑約 18 cm", "自訂直徑 16 cm", "自訂直徑 20 cm"],
+        diameters: [
+          { label: "標準半徑 9 cm", radius: 9, diameter: 18 },
+          { label: "自訂半徑 8 cm", radius: 8, diameter: 16 },
+          { label: "自訂半徑 10 cm", radius: 10, diameter: 20 }
+        ],
         players: ["每隊 7 名球員", "每隊 5 名球員", "每隊 6 名球員"]
       },
       "欖球": {
-        diameters: ["長度約 28 cm、闊度約 18 cm", "自訂長度 24 cm", "自訂長度 32 cm"],
+        diameters: [
+          { label: "標準半徑 14 cm", radius: 14, diameter: 28, promptLabel: "標準橄欖球長度約 28 cm，闊度約 18 cm（半徑約 14 cm）" },
+          { label: "自訂半徑 12 cm", radius: 12, diameter: 24, promptLabel: "橄欖球長度約 24 cm，半徑約 12 cm（闊度按教室規格）" },
+          { label: "自訂半徑 16 cm", radius: 16, diameter: 32, promptLabel: "橄欖球長度約 32 cm，半徑約 16 cm（闊度按教室規格）" }
+        ],
         players: ["每隊 15 名球員", "每隊 7 名球員", "每隊 10 名球員"]
       },
       "棒球": {
-        diameters: ["標準直徑約 7.4 cm", "自訂直徑 8 cm", "自訂直徑 10 cm"],
+        diameters: [
+          { label: "標準半徑 3.7 cm", radius: 3.7, diameter: 7.4 },
+          { label: "自訂半徑 4 cm", radius: 4, diameter: 8 },
+          { label: "自訂半徑 5 cm", radius: 5, diameter: 10 }
+        ],
         players: ["每隊 9 名球員", "每隊 6 名球員", "每隊 12 名球員"]
       },
       "壘球": {
-        diameters: ["標準直徑約 9.7 cm", "自訂直徑 9 cm", "自訂直徑 11 cm"],
+        diameters: [
+          { label: "標準半徑 4.85 cm", radius: 4.85, diameter: 9.7 },
+          { label: "自訂半徑 4.5 cm", radius: 4.5, diameter: 9 },
+          { label: "自訂半徑 5.5 cm", radius: 5.5, diameter: 11 }
+        ],
         players: ["每隊 9 名球員", "每隊 6 名球員", "每隊 10 名球員"]
       },
       "曲棍球": {
-        diameters: ["標準直徑約 7.5 cm", "自訂直徑 8 cm", "自訂直徑 10 cm"],
+        diameters: [
+          { label: "標準半徑 3.75 cm", radius: 3.75, diameter: 7.5 },
+          { label: "自訂半徑 4 cm", radius: 4, diameter: 8 },
+          { label: "自訂半徑 5 cm", radius: 5, diameter: 10 }
+        ],
         players: ["每隊 11 名球員", "每隊 6 名球員", "每隊 8 名球員"]
       },
       "高爾夫球": {
-        diameters: ["標準直徑約 4.3 cm", "自訂直徑 5 cm", "自訂直徑 7 cm"],
+        diameters: [
+          { label: "標準半徑 2.15 cm", radius: 2.15, diameter: 4.3 },
+          { label: "自訂半徑 2.5 cm", radius: 2.5, diameter: 5 },
+          { label: "自訂半徑 3.5 cm", radius: 3.5, diameter: 7 }
+        ],
         players: ["個人比賽", "二人一組", "四人一組"]
       },
       "保齡球": {
-        diameters: ["標準直徑約 21.8 cm", "自訂直徑 18 cm", "自訂直徑 24 cm"],
+        diameters: [
+          { label: "標準半徑 10.9 cm", radius: 10.9, diameter: 21.8 },
+          { label: "自訂半徑 9 cm", radius: 9, diameter: 18 },
+          { label: "自訂半徑 12 cm", radius: 12, diameter: 24 }
+        ],
         players: ["個人比賽", "每隊 2 名球員", "每隊 4 名球員"]
       },
       "水球": {
-        diameters: ["標準直徑約 22 cm", "自訂直徑 20 cm", "自訂直徑 24 cm"],
+        diameters: [
+          { label: "標準半徑 11 cm", radius: 11, diameter: 22 },
+          { label: "自訂半徑 10 cm", radius: 10, diameter: 20 },
+          { label: "自訂半徑 12 cm", radius: 12, diameter: 24 }
+        ],
         players: ["每隊 7 名球員", "每隊 5 名球員", "每隊 6 名球員"]
       },
       "閃避球": {
-        diameters: ["標準直徑約 20 cm", "自訂直徑 18 cm", "自訂直徑 22 cm"],
+        diameters: [
+          { label: "標準半徑 10 cm", radius: 10, diameter: 20 },
+          { label: "自訂半徑 9 cm", radius: 9, diameter: 18 },
+          { label: "自訂半徑 11 cm", radius: 11, diameter: 22 }
+        ],
         players: ["每隊 6 名球員", "每隊 8 名球員", "每隊 10 名球員"]
       },
       "創意球": {
-        diameters: ["自訂直徑 18 cm", "自訂直徑 21 cm", "自訂直徑 26 cm"],
+        diameters: [
+          { label: "標準半徑 9 cm", radius: 9, diameter: 18, promptLabel: "自訂半徑 9 cm，對應直徑 18 cm" },
+          { label: "自訂半徑 10.5 cm", radius: 10.5, diameter: 21, promptLabel: "自訂半徑 10.5 cm，對應直徑 21 cm" },
+          { label: "自訂半徑 13 cm", radius: 13, diameter: 26, promptLabel: "自訂半徑 13 cm，對應直徑 26 cm" }
+        ],
         players: ["每隊 4 名球員", "每隊 5 名球員", "每隊 8 名球員"]
       }
     };
@@ -855,6 +1016,7 @@
     const sportSelect = document.querySelector("#sport");
     const diameterSelect = document.querySelector("#diameter");
     const playersSelect = document.querySelector("#players");
+    const diameterAnswerInput = document.querySelector("#diameter-answer");
     const promptOutput = document.querySelector("#prompt-output");
     const copyButton = document.querySelector("#copy-prompt");
     const copyStatus = document.querySelector("#copy-status");
@@ -877,6 +1039,15 @@
     let teacherPassword = "";
     let activeTeacherClass = "all";
     let activePreviewUrl = "";
+    const blobCache = new Map();
+    const thumbUrls = new Map();
+    const IMAGE_MAX_SIDE = 1600;
+    const IMAGE_TARGET_BYTES = 2.8 * 1024 * 1024;
+    const IMAGE_TARGET_QUALITY = 0.84;
+    const PROMPT_NAME_AND_DIMENSION_REQUIREMENT = "圖片上要顯示半徑及直徑長度，及要給予一個中文命名。";
+    const PROMPT_LOCKED_MESSAGE = "請先根據半徑資料，回答正確「直徑」數字。答對後才會顯示完整 Gemini 指令。";
+    const DIAMETER_ANSWER_TOLERANCE = 0.001;
+    let currentPromptText = "";
 
     function fillSelect(select, values) {
       select.innerHTML = "";
@@ -888,10 +1059,73 @@
       });
     }
 
+    function normalizeDiameterEntry(entry) {
+      if (!entry) return { label: "", radius: NaN, diameter: NaN, promptLabel: "" };
+      if (typeof entry === "string") {
+        const extracted = Number(extractDiameterValue(entry));
+        return {
+          label: entry,
+          radius: Number.isFinite(extracted) ? extracted / 2 : NaN,
+          diameter: extracted,
+          promptLabel: ""
+        };
+      }
+      const diameter = Number(entry.diameter);
+      return {
+        label: String(entry.label || "").trim() || "球體尺寸",
+        radius: Number(entry.radius),
+        diameter: Number.isFinite(diameter) ? diameter : Number(extractDiameterValue(entry.label)),
+        promptLabel: entry.promptLabel ? String(entry.promptLabel) : ""
+      };
+    }
+
+    function getDiameterEntryForSelectedSport() {
+      const data = sportData[sportSelect.value];
+      if (!data || !Array.isArray(data.diameters)) return null;
+      const index = Number(diameterSelect.value);
+      return normalizeDiameterEntry(data.diameters[index]) || normalizeDiameterEntry(data.diameters[0]);
+    }
+
+    function formatDimension(value) {
+      if (!Number.isFinite(value)) return "";
+      return Number.isInteger(value) ? String(value) : `${value}`.replace(/\.?0+$/, "");
+    }
+
+    function getDiameterDisplayText() {
+      const diameterEntry = getDiameterEntryForSelectedSport();
+      if (!diameterEntry) return "";
+      if (diameterEntry.promptLabel) return diameterEntry.promptLabel;
+      if (!Number.isFinite(diameterEntry.diameter) || !Number.isFinite(diameterEntry.radius)) return diameterEntry.label;
+      return `半徑約 ${formatDimension(diameterEntry.radius)} cm，直徑約 ${formatDimension(diameterEntry.diameter)} cm`;
+    }
+
+    function getExpectedDiameterValue() {
+      const diameterEntry = getDiameterEntryForSelectedSport();
+      return Number.isFinite(diameterEntry?.diameter) ? diameterEntry.diameter : NaN;
+    }
+
+    function fillDiameterSelect(diameterValues) {
+      diameterSelect.innerHTML = "";
+      (diameterValues || []).forEach((value, index) => {
+        const item = normalizeDiameterEntry(value);
+        const option = document.createElement("option");
+        option.value = String(index);
+        option.textContent = item.label || `球體半徑 ${index + 1}`;
+        option.dataset.radius = Number.isFinite(item.radius) ? String(item.radius) : "";
+        option.dataset.diameter = Number.isFinite(item.diameter) ? String(item.diameter) : "";
+        option.dataset.prompt = item.promptLabel || "";
+        diameterSelect.appendChild(option);
+      });
+    }
+
     function updateSportFields() {
       const data = sportData[sportSelect.value];
-      fillSelect(diameterSelect, data.diameters);
+      if (!data) return;
+      fillDiameterSelect(data.diameters);
       fillSelect(playersSelect, data.players);
+      if (diameterAnswerInput) {
+        diameterAnswerInput.value = "";
+      }
       updatePrompt();
     }
 
@@ -912,22 +1146,54 @@
 
     function updatePrompt() {
       const sport = formValue("sport");
-      const diameter = formValue("diameter");
+      const diameter = getDiameterDisplayText();
       const players = formValue("players");
       const material = formValue("material");
       const color = formValue("color");
       const style = formValue("style");
       const background = formValue("background");
-      promptOutput.value = `請生成一幅${style}風格的專屬球類設計圖：主角是一個${sport}，${diameter}，適合${players}的球類活動。球的材質是${material}，主要顏色是${color}，背景是${background}。請突出球體的圓形、直徑感和創意運動設計，畫面清晰、有立體感、適合小學生STEAM作品展示。不要加入文字、水印或品牌標誌。`;
+      const generatedPrompt = `請生成一幅${style}風格的專屬球類設計圖：主角是一個${sport}，${diameter}，適合${players}的球類活動。球的材質是${material}，主要顏色是${color}，背景是${background}。請突出球體的圓形、直徑感和創意運動設計，畫面清晰、有立體感、適合小學生STEAM作品展示。不要加入文字、水印或品牌標誌。`;
+      currentPromptText = enforcePromptRequirement(generatedPrompt);
       document.querySelector("#chip-sport").textContent = sport;
       document.querySelector("#chip-diameter").textContent = diameter;
       document.querySelector("#chip-players").textContent = players;
+      updateCopyAvailability();
+    }
+
+    function enforcePromptRequirement(promptText) {
+      const text = String(promptText || "");
+      return text.includes(PROMPT_NAME_AND_DIMENSION_REQUIREMENT)
+        ? text
+        : `${text}\n\n${PROMPT_NAME_AND_DIMENSION_REQUIREMENT}`;
+    }
+
+    function extractDiameterValue(value) {
+      const match = String(value || "").match(/([0-9]+(?:\.[0-9]+)?)/);
+      return match ? Number(match[1]) : NaN;
+    }
+
+    function isDiameterAnswerCorrect() {
+      const expected = getExpectedDiameterValue();
+      const answer = Number(diameterAnswerInput ? diameterAnswerInput.value : "");
+      return Number.isFinite(expected) && Number.isFinite(answer) && Math.abs(expected - answer) <= DIAMETER_ANSWER_TOLERANCE;
+    }
+
+    function updateCopyAvailability() {
+      const canCopy = isDiameterAnswerCorrect();
+      copyButton.disabled = !canCopy;
+      copyButton.title = canCopy ? "複製指令" : "請先答對「直徑」後再複製";
+      promptOutput.value = canCopy ? currentPromptText : PROMPT_LOCKED_MESSAGE;
     }
 
     async function copyPrompt() {
+      if (!isDiameterAnswerCorrect()) {
+        copyStatus.classList.add("error");
+        copyStatus.textContent = "請先答對「直徑」後，才能複製完整提示詞。";
+        return;
+      }
       copyStatus.classList.remove("error");
       try {
-        await navigator.clipboard.writeText(promptOutput.value);
+        await navigator.clipboard.writeText(currentPromptText);
         copyStatus.textContent = "已複製，可以貼到 Gemini。";
       } catch {
         promptOutput.focus();
@@ -942,10 +1208,32 @@
       uploadStatus.classList.remove("error");
       uploadStatus.textContent = "正在上載...";
 
+      const fileInput = uploadForm.querySelector("#work-file");
+      const originalFile = fileInput ? fileInput.files?.[0] : null;
+      if (!originalFile) {
+        uploadStatus.classList.add("error");
+        uploadStatus.textContent = "請先選擇要上載的作品檔案。";
+        return;
+      }
+
+      let uploadFile = originalFile;
+      try {
+        uploadFile = await compressImageIfNeeded(originalFile);
+        if (uploadFile !== originalFile) {
+          uploadStatus.textContent = `已壓縮圖片：${formatBytes(originalFile.size)} → ${formatBytes(uploadFile.size)}`;
+        }
+      } catch {
+        uploadFile = originalFile;
+      }
+
       const formData = new FormData(uploadForm);
-      formData.append("prompt", promptOutput.value);
+      if (fileInput) {
+        formData.delete("file");
+        formData.append("file", uploadFile, uploadFile.name);
+      }
+      formData.append("prompt", currentPromptText);
       formData.append("sport", formValue("sport"));
-      formData.append("diameter", formValue("diameter"));
+      formData.append("diameter", getDiameterDisplayText() || "");
       formData.append("players", formValue("players"));
       formData.append("material", formValue("material"));
       formData.append("color", formValue("color"));
@@ -959,6 +1247,7 @@
         uploadStatus.textContent = `已成功上載：${formData.get("className")} ${formData.get("studentNo")}號`;
         uploadForm.reset();
         updateStudentNumbers();
+        updateCopyAvailability();
       } catch (error) {
         uploadStatus.classList.add("error");
         uploadStatus.textContent = error.message || "暫時未能上載，請告訴老師。";
@@ -985,7 +1274,88 @@
       }
     }
 
+    async function compressImageIfNeeded(file) {
+      if (!file || !file.type || !file.type.startsWith("image/")) return file;
+      if (file.size <= IMAGE_TARGET_BYTES) return file;
+
+      const decodedImage = await decodeImageElement(file);
+      if (!decodedImage) return file;
+
+      const maxSide = IMAGE_MAX_SIDE;
+      const ratio = Math.min(1, maxSide / Math.max(decodedImage.width, decodedImage.height));
+      const targetWidth = Math.max(1, Math.round(decodedImage.width * ratio));
+      const targetHeight = Math.max(1, Math.round(decodedImage.height * ratio));
+
+      const canvas = document.createElement("canvas");
+      canvas.width = targetWidth;
+      canvas.height = targetHeight;
+      const ctx = canvas.getContext("2d");
+      if (!ctx) {
+        if (decodedImage.close) decodedImage.close();
+        return file;
+      }
+
+      ctx.drawImage(decodedImage, 0, 0, targetWidth, targetHeight);
+      if (decodedImage.close) decodedImage.close();
+
+      let quality = IMAGE_TARGET_QUALITY;
+      let blob = await canvasToBlob(canvas, "image/jpeg", quality);
+      while (blob && blob.size > IMAGE_TARGET_BYTES && quality > 0.55) {
+        quality = Math.max(0.55, quality - 0.12);
+        blob = await canvasToBlob(canvas, "image/jpeg", quality);
+      }
+
+      if (!blob || blob.size >= file.size) return file;
+      const baseName = file.name ? file.name.replace(/\.[^.]+$/, "") : "upload";
+      return new File([blob], `${baseName}.jpg`, { type: "image/jpeg", lastModified: file.lastModified });
+    }
+
+    async function decodeImageElement(file) {
+      const bitmap = await createImageBitmap(file).catch(() => null);
+      if (bitmap) return bitmap;
+
+      const tempUrl = URL.createObjectURL(file);
+      try {
+        return await new Promise((resolve, reject) => {
+          const img = new Image();
+          img.onload = () => resolve(img);
+          img.onerror = () => reject(new Error("decode"));
+          img.src = tempUrl;
+        });
+      } catch {
+        return null;
+      } finally {
+        URL.revokeObjectURL(tempUrl);
+      }
+    }
+
+    async function canvasToBlob(canvas, type, quality) {
+      return new Promise((resolve) => {
+        canvas.toBlob((blob) => resolve(blob), type, quality);
+      });
+    }
+
+    function formatBytes(bytes) {
+      const value = Number(bytes);
+      if (!Number.isFinite(value) || value <= 0) return "0 B";
+      const units = ["B", "KB", "MB"];
+      let i = 0;
+      let size = value;
+      while (size >= 1024 && i < units.length - 1) {
+        size /= 1024;
+        i += 1;
+      }
+      return `${size.toFixed(i ? 1 : 0)} ${units[i]}`;
+    }
+
+    function clearBlobPreviews() {
+      blobCache.clear();
+      thumbUrls.forEach((url) => URL.revokeObjectURL(url));
+      thumbUrls.clear();
+    }
+
     async function loadTeacherClass(className = activeTeacherClass) {
+      clearBlobPreviews();
       if (!teacherPassword) {
         teacherStatus.classList.add("error");
         teacherStatus.textContent = "請先輸入老師密碼。";
@@ -1034,30 +1404,45 @@
         </div>
       `).join("");
 
-      submissionsList.innerHTML = data.records.length
-        ? data.records.map((record) => `
+      const recordsToRender = (data.records || []).filter((record) => record && (record.className || record.studentNo));
+      submissionsList.innerHTML = recordsToRender.length
+        ? recordsToRender
+            .map((record, index) => {
+              const isImage = isImageRecord(record);
+              const displayName = record.originalName || "學生作品";
+              return `
           <article class="submission-item">
-            <div class="submission-badge">
-              <div>
+            <div class="submission-title">
+              <div class="submission-badge">
                 <strong>${record.className}</strong>
                 <span>${record.studentNo}號</span>
               </div>
             </div>
-            <button class="work-thumb" type="button" data-preview="${encodeURIComponent(record.key)}" data-name="${encodeURIComponent(record.originalName || "student-work")}" data-type="${encodeURIComponent(record.contentType || "")}">
-              ${isImageRecord(record) ? `<span>點擊預覽圖片</span>` : `<span>${fileTypeLabel(record.contentType)}</span>`}
-            </button>
+        <button class="work-thumb" type="button" data-preview="${encodeURIComponent(record.key)}" data-name="${encodeURIComponent(record.originalName || "student-work")}" data-type="${encodeURIComponent(record.contentType || "")}" data-thumb-index="${index}">
+              ${isImage ? `<span>載入圖片...</span>` : `<span>${fileTypeLabel(record.contentType)} (${displayName})</span>`}
+              </button>
             <div class="submission-meta">
-              <strong>${record.className} ${record.studentNo}號 · ${record.artifactType || "作品"}</strong>
-              <span>${record.artifactType || "作品"} · ${record.originalName || "未命名檔案"}</span>
+              <strong>${record.className} ${record.studentNo}號 - ${record.artifactType || "作品"}</strong>
+              <span>${record.artifactType || "作品"} | ${displayName}</span>
               <span>${formatTime(record.uploadedAt)}</span>
             </div>
             <div class="submission-actions">
-              <button class="button secondary" type="button" data-preview="${encodeURIComponent(record.key)}" data-name="${encodeURIComponent(record.originalName || "student-work")}" data-type="${encodeURIComponent(record.contentType || "")}">預覽</button>
-              <button class="button ghost" type="button" data-download="${encodeURIComponent(record.key)}" data-name="${encodeURIComponent(record.originalName || "student-work")}">下載</button>
+              <button class="button ghost" type="button" data-download="${encodeURIComponent(record.key)}" data-name="${encodeURIComponent(record.originalName || "student-work")}" >下載作品</button>
             </div>
           </article>
-        `).join("")
+          `;
+            })
+            .join("")
         : `<div class="teacher-card"><strong>暫未有作品</strong><p>${label} 尚未有學生上載作品。</p></div>`;
+      if (!recordsToRender.length) return;
+
+      recordsToRender.forEach((record, index) => {
+        if (!isImageRecord(record)) return;
+        const thumbButton = submissionsList.querySelector(`[data-thumb-index="${index}"]`);
+        if (!thumbButton) return;
+        void loadImageThumbnail(record, thumbButton);
+      }
+      );
     }
 
     function formatTime(value) {
@@ -1066,7 +1451,11 @@
     }
 
     function isImageRecord(record) {
-      return String(record.contentType || "").startsWith("image/");
+      return isImageType(record.contentType || "") || /\.(png|jpe?g|webp|gif|bmp|avif|heic|heif)$/i.test(String(record.originalName || ""));
+    }
+
+    function isImageType(contentType) {
+      return String(contentType || "").toLowerCase().startsWith("image/");
     }
 
     function fileTypeLabel(contentType) {
@@ -1077,6 +1466,7 @@
     }
 
     async function fetchSubmissionBlob(key) {
+      if (blobCache.has(key)) return blobCache.get(key);
       const response = await fetch("/api/download", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -1086,7 +1476,29 @@
         const result = await response.json().catch(() => ({}));
         throw new Error(result.error || "未能讀取作品。");
       }
-      return response.blob();
+      const blob = await response.blob();
+      blobCache.set(key, blob);
+      return blob;
+    }
+
+    async function loadImageThumbnail(record, buttonEl) {
+      if (!buttonEl) return;
+      try {
+        const blob = await fetchSubmissionBlob(record.key);
+        const contentType = blob.type || record.contentType || "";
+        if (!isImageType(contentType) && !/\.(png|jpe?g|webp|gif|bmp|avif|heic|heif)$/i.test(String(record.originalName || ""))) {
+          buttonEl.innerHTML = `<span>${fileTypeLabel(contentType)}</span>`;
+          return;
+        }
+        const thumbUrl = URL.createObjectURL(blob);
+        if (thumbUrls.has(record.key)) {
+          URL.revokeObjectURL(thumbUrls.get(record.key));
+        }
+        thumbUrls.set(record.key, thumbUrl);
+        buttonEl.innerHTML = `<img src="${thumbUrl}" alt="${record.originalName || "student-work"}" loading="eager" decoding="async" class="work-thumb-img">`;
+      } catch {
+        buttonEl.innerHTML = `<span>${fileTypeLabel(record.contentType)}</span>`;
+      }
     }
 
     function saveBlob(blob, filename) {
@@ -1105,7 +1517,7 @@
       teacherStatus.textContent = "正在開啟作品預覽...";
       try {
         const blob = await fetchSubmissionBlob(key);
-        if (!String(contentType || blob.type || "").startsWith("image/")) {
+        if (!isImageType(contentType || blob.type || "")) {
           teacherStatus.textContent = "這份作品不是圖片，已改為下載檢視。";
           saveBlob(blob, filename || "student-work");
           return;
@@ -1132,7 +1544,14 @@
     }
 
     sportSelect.addEventListener("change", updateSportFields);
-    promptForm.addEventListener("change", updatePrompt);
+    promptForm.addEventListener("change", (event) => {
+      if (event.target === diameterSelect && diameterAnswerInput) {
+        diameterAnswerInput.value = "";
+      }
+      updatePrompt();
+    });
+    diameterAnswerInput?.addEventListener("input", updateCopyAvailability);
+    diameterAnswerInput?.addEventListener("change", updateCopyAvailability);
     copyButton.addEventListener("click", copyPrompt);
     classSelect.addEventListener("change", updateStudentNumbers);
     uploadForm.addEventListener("submit", uploadWork);
@@ -1171,6 +1590,8 @@
 
     updateSportFields();
     updateStudentNumbers();
+    updateCopyAvailability();
   </script>
 </body>
 </html>
+
