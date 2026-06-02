@@ -1,0 +1,11 @@
+name = "lwwf-steam-ai-ball-designer"
+main = "src/worker.js"
+compatibility_date = "2026-05-14"
+
+[assets]
+directory = "./public"
+binding = "ASSETS"
+
+[[kv_namespaces]]
+binding = "STEAM_UPLOADS_KV"
+id = "c72ba94c393f4fd2bfbcb43448b0f52f"
