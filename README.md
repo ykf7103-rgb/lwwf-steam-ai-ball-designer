@@ -5,7 +5,7 @@
 ## 正式網址
 
 - Worker 網址：https://lwwf-steam-ai-ball-designer.lwwfaiteams.workers.dev
-- GitHub repo：部署後填寫
+- GitHub repo：https://github.com/ykf7103-rgb/lwwf-steam-ai-ball-designer
 
 ## 內容
 
