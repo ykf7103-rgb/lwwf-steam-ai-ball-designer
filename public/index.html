@@ -1130,7 +1130,7 @@
     }
 
     function getDiameterEntryForSelectedSport() {
-      if (diameterSelect.value === CUSTOM_OPTION_VALUE) {
+      if (isCustomRadiusActive()) {
         const radius = getCustomRadiusValue();
         return {
           label: Number.isFinite(radius) ? `自訂半徑 ${formatDimension(radius)} cm` : "自訂半徑",
@@ -1218,13 +1218,29 @@
       return select?.value === CUSTOM_OPTION_VALUE;
     }
 
+    function isCustomRadiusActive() {
+      return isCustomSelected(diameterSelect) || (customInputs.diameter && !customInputs.diameter.hidden);
+    }
+
     function getCustomText(name) {
       return String(customInputs[name]?.value || "").trim();
     }
 
+    function parsePositiveNumber(value) {
+      const normalized = String(value || "")
+        .replace(/[０-９]/g, (char) => String(char.charCodeAt(0) - 0xff10))
+        .replace("．", ".")
+        .trim();
+      const match = normalized.match(/([0-9]+(?:\.[0-9]+)?)/);
+      const parsed = match ? Number(match[1]) : NaN;
+      return Number.isFinite(parsed) && parsed > 0 ? parsed : NaN;
+    }
+
     function getCustomRadiusValue() {
-      const radius = Number(getCustomText("diameter"));
-      return Number.isFinite(radius) && radius > 0 ? radius : NaN;
+      const input = customInputs.diameter;
+      const radius = input?.valueAsNumber;
+      if (Number.isFinite(radius) && radius > 0) return radius;
+      return parsePositiveNumber(getCustomText("diameter"));
     }
 
     function getFieldValue(name, fallback = "") {
@@ -1289,7 +1305,7 @@
 
     function isDiameterAnswerCorrect() {
       const expected = getExpectedDiameterValue();
-      const answer = Number(diameterAnswerInput ? diameterAnswerInput.value : "");
+      const answer = parsePositiveNumber(diameterAnswerInput ? diameterAnswerInput.value : "");
       return Number.isFinite(expected) && Number.isFinite(answer) && Math.abs(expected - answer) <= DIAMETER_ANSWER_TOLERANCE;
     }
 
@@ -1673,12 +1689,14 @@
     });
     Object.entries(customInputs).forEach(([name, input]) => {
       if (!input) return;
-      input.addEventListener("input", () => {
+      const handleCustomInput = () => {
         if (name === "diameter" && diameterAnswerInput) {
           diameterAnswerInput.value = "";
         }
         updatePrompt();
-      });
+      };
+      input.addEventListener("input", handleCustomInput);
+      input.addEventListener("change", handleCustomInput);
     });
     diameterAnswerInput?.addEventListener("input", updateCopyAvailability);
     diameterAnswerInput?.addEventListener("change", updateCopyAvailability);
