@@ -305,7 +305,7 @@
 
     .teacher-tabs {
       display: grid;
-      grid-template-columns: 1.2fr repeat(4, 1fr);
+      grid-template-columns: 1.2fr repeat(5, 1fr);
       gap: 8px;
       margin: 16px 0;
     }
@@ -795,7 +795,7 @@
             <div class="section-kicker">作品上載</div>
             <h2 id="upload-title">選班別和學號交作品</h2>
           </div>
-          <p class="section-note">班別會自動限制學號範圍：5A 至 26 號、5B 至 21 號、5C 至 28 號、5D 至 20 號。</p>
+          <p class="section-note">班別會自動限制學號範圍：5A 至 26 號、5B 至 21 號、5C 至 28 號、5D 至 20 號、7A 測試班至 10 號。</p>
         </div>
         <div class="upload-grid">
           <form class="upload-form" id="upload-form">
@@ -807,6 +807,7 @@
                   <option value="5B">5B</option>
                   <option value="5C">5C</option>
                   <option value="5D">5D</option>
+                  <option value="7A">7A（測試班）</option>
                 </select>
               </div>
               <div class="field"><label for="student-no">學號</label><select id="student-no" name="studentNo" required></select></div>
@@ -865,6 +866,7 @@
               <button class="class-tab" type="button" data-class="5B">5B</button>
               <button class="class-tab" type="button" data-class="5C">5C</button>
               <button class="class-tab" type="button" data-class="5D">5D</button>
+              <button class="class-tab" type="button" data-class="7A">7A測試</button>
             </div>
           </div>
         </div>
@@ -903,7 +905,7 @@
   </div>
 
   <script>
-    const classLimits = { "5A": 26, "5B": 21, "5C": 28, "5D": 20 };
+    const classLimits = { "5A": 26, "5B": 21, "5C": 28, "5D": 20, "7A": 10 };
     const sportData = {
       "足球": {
         diameters: [
@@ -1201,9 +1203,13 @@
       for (let i = 1; i <= limit; i += 1) {
         const option = document.createElement("option");
         option.value = String(i);
-        option.textContent = `${i}號`;
+        option.textContent = `${formatStudentNo(i)}號`;
         studentNoSelect.appendChild(option);
       }
+    }
+
+    function formatStudentNo(value) {
+      return String(Number(value) || 0).padStart(2, "0");
     }
 
     function formValue(name) {
@@ -1381,7 +1387,7 @@
         const response = await fetch("/api/upload", { method: "POST", body: formData });
         const result = await response.json().catch(() => ({}));
         if (!response.ok || !result.ok) throw new Error(result.error || "暫時未能上載。");
-        uploadStatus.textContent = `已成功上載：${formData.get("className")} ${formData.get("studentNo")}號`;
+        uploadStatus.textContent = `已成功上載：${formData.get("className")} ${formatStudentNo(formData.get("studentNo"))}號`;
         uploadForm.reset();
         updateStudentNumbers();
         updateCopyAvailability();
@@ -1536,7 +1542,7 @@
 
       studentGrid.innerHTML = data.students.map((student) => `
         <div class="student-cell ${student.submitted ? "done" : "missing"}">
-          ${student.className ? `${student.className} ` : ""}${student.no}號
+          ${student.className ? `${student.className} ` : ""}${formatStudentNo(student.no)}號
           <span>${student.submitted ? "已交" : "未交"}</span>
         </div>
       `).join("");
@@ -1552,14 +1558,14 @@
             <div class="submission-title">
               <div class="submission-badge">
                 <strong>${record.className}</strong>
-                <span>${record.studentNo}號</span>
+                <span>${formatStudentNo(record.studentNo)}號</span>
               </div>
             </div>
         <button class="work-thumb" type="button" data-preview="${encodeURIComponent(record.key)}" data-name="${encodeURIComponent(record.originalName || "student-work")}" data-type="${encodeURIComponent(record.contentType || "")}" data-thumb-index="${index}">
               ${isImage ? `<span>載入圖片...</span>` : `<span>${fileTypeLabel(record.contentType)} (${displayName})</span>`}
               </button>
             <div class="submission-meta">
-              <strong>${record.className} ${record.studentNo}號 - ${record.artifactType || "作品"}</strong>
+              <strong>${record.className} ${formatStudentNo(record.studentNo)}號 - ${record.artifactType || "作品"}</strong>
               <span>${record.artifactType || "作品"} | ${displayName}</span>
               <span>${formatTime(record.uploadedAt)}</span>
             </div>

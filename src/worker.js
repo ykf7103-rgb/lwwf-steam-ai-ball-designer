@@ -2,7 +2,8 @@ const CLASS_LIMITS = {
   "5A": 26,
   "5B": 21,
   "5C": 28,
-  "5D": 20
+  "5D": 20,
+  "7A": 10
 };
 
 const MAX_UPLOAD_BYTES = 10 * 1024 * 1024;
